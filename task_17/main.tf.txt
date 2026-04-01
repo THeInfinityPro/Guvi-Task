@@ -1,0 +1,40 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
+provider "aws" {
+  alias  = "west"
+  region = "us-west-2"
+}
+
+# 🔹 Get latest Amazon Linux AMI (East)
+data "aws_ami" "east_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+}
+
+# 🔹 Get latest Amazon Linux AMI (West)
+data "aws_ami" "west_ami" {
+  provider    = aws.west
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-x86_64"]
+  }
+}
+
+# 🔹 EC2 East
+resource "aws_instance" "east_instance" {
+  provider      = aws
+  ami           = data.aws_ami.east_ami.id
+  instance_type = "m7i-flex.large"
+
+  tags = {
+    Name = "EC2-East"
